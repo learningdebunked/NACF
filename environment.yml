@@ -1,0 +1,32 @@
+name: nacf
+channels:
+  - pytorch
+  - conda-forge
+  - defaults
+
+dependencies:
+  - python=3.9
+  - pytorch>=2.0
+  - torchvision
+  - numpy
+  - pandas
+  - scikit-learn
+  - scipy
+  - matplotlib
+  - seaborn
+  - jupyter
+  - pip
+  
+  # Install remaining packages via pip
+  - pip:
+      - transformers>=4.30.0
+      - flwr>=1.5.0
+      - gymnasium>=0.28.0
+      - tensorboard>=2.13.0
+      - wandb>=0.15.0
+      - pytest>=7.4.0
+      - pytest-cov>=4.1.0
+      - ipywidgets>=8.0.0
+      - tqdm>=4.65.0
+      - pyyaml>=6.0
+      - openpyxl>=3.1.0

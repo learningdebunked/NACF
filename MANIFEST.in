@@ -1,0 +1,11 @@
+include README.md
+include LICENSE
+include requirements.txt
+include environment.yml
+recursive-include src/config *.yaml *.yml *.json
+recursive-include data/raw .gitkeep
+recursive-include data/processed .gitkeep
+recursive-include data/synthetic .gitkeep
+recursive-include results .gitkeep
+recursive-exclude * __pycache__
+recursive-exclude * *.py[co]
