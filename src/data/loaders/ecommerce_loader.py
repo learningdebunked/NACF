@@ -90,14 +90,23 @@ class UCIRetailLoader:
         self.data_path = Path(data_path)
     
     def load_data(self) -> pd.DataFrame:
-        """Load Online_Retail.csv file."""
+        """Load Online_Retail.xlsx file."""
         try:
-            retail_file = self.data_path / "Online_Retail.csv"
+            # Try XLSX first (the actual downloaded file)
+            retail_file = self.data_path / "Online_Retail.xlsx"
             if not retail_file.exists():
-                print(f"Warning: {retail_file} not found. Generating synthetic data.")
-                return self._generate_synthetic_data()
+                # Try CSV as fallback
+                retail_file = self.data_path / "Online_Retail.csv"
+                if not retail_file.exists():
+                    print(f"Warning: {retail_file} not found. Generating synthetic data.")
+                    return self._generate_synthetic_data()
             
-            df = pd.read_csv(retail_file, encoding='ISO-8859-1')
+            # Load based on file extension
+            if retail_file.suffix == '.xlsx':
+                df = pd.read_excel(retail_file)
+            else:
+                df = pd.read_csv(retail_file, encoding='ISO-8859-1')
+            
             df = df.dropna(subset=['CustomerID'])
             df['InvoiceDate'] = pd.to_datetime(df['InvoiceDate'])
             return df
@@ -107,13 +116,24 @@ class UCIRetailLoader:
     
     def parse_and_group(self, df: pd.DataFrame) -> pd.DataFrame:
         """Group by customer and invoice date."""
-        grouped = df.groupby(['CustomerID', 'InvoiceDate']).agg({
-            'StockCode': lambda x: list(x),
-            'Quantity': lambda x: list(x)
-        }).reset_index()
+        # Sort by customer and date
+        df = df.sort_values(['CustomerID', 'InvoiceDate'])
         
-        grouped.columns = ['user_id', 'timestamp', 'items', 'quantities']
-        return grouped
+        # Group by customer and create sessions
+        sessions = []
+        for customer_id, group in df.groupby('CustomerID'):
+            # Create list of items and timestamps for this customer
+            items = group['StockCode'].tolist()
+            timestamps = group['InvoiceDate'].tolist()
+            
+            sessions.append({
+                'user_id': customer_id,
+                'session_id': f"uci_{customer_id}",
+                'event_type': items,  # Use event_type for consistency
+                'timestamp': timestamps
+            })
+        
+        return pd.DataFrame(sessions)
     
     def _generate_synthetic_data(self, n_customers: int = 500) -> pd.DataFrame:
         """Generate synthetic retail data."""

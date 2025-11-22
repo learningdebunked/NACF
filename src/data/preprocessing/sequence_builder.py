@@ -9,17 +9,18 @@ import pandas as pd
 class SequenceBuilder:
     """Build fixed-length sequences from event data."""
     
-    def __init__(self, seq_length: int = 50, stride: int = 10):
+    def __init__(self, seq_length: int = 50, stride: int = 10, min_length: int = 5):
         self.seq_length = seq_length
         self.stride = stride
         self.pad_token = -1
+        self.min_length = min_length  # Minimum sequence length to keep
     
     def build_sequences(self, df: pd.DataFrame) -> Tuple[np.ndarray, np.ndarray]:
         """
         Build sequences from DataFrame with event lists.
         
         Args:
-            df: DataFrame with columns [user_id, event_type, timestamp]
+            df: DataFrame with columns [user_id, event_type/items, timestamp]
         
         Returns:
             sequences: Array of shape (N, seq_length, feature_dim)
@@ -28,8 +29,25 @@ class SequenceBuilder:
         sequences = []
         
         for _, row in df.iterrows():
-            events = row['event_type'] if isinstance(row['event_type'], list) else [row['event_type']]
+            # Handle different column names (event_type or items)
+            if 'event_type' in row:
+                events = row['event_type'] if isinstance(row['event_type'], list) else [row['event_type']]
+            elif 'items' in row:
+                events = row['items'] if isinstance(row['items'], list) else [row['items']]
+            else:
+                continue
+            
             timestamps = row['timestamp'] if isinstance(row['timestamp'], list) else [row['timestamp']]
+            
+            # Skip if sequence too short
+            if len(events) < self.min_length:
+                continue
+            
+            # If shorter than seq_length, pad it
+            if len(events) < self.seq_length:
+                encoded_seq = self._encode_sequence(events, timestamps)
+                sequences.append(encoded_seq)
+                continue
             
             # Create sliding windows
             for i in range(0, len(events) - self.seq_length + 1, self.stride):
