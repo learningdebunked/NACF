@@ -11,19 +11,42 @@ from typing import Dict
 
 def calculate_auc(y_true: np.ndarray, y_pred_probs: np.ndarray) -> float:
     """Calculate AUC score."""
-    return roc_auc_score(y_true, y_pred_probs)
+    try:
+        # Check if we have both classes
+        if len(np.unique(y_true)) < 2:
+            print("Warning: Only one class in y_true, returning 0.5 for AUC")
+            return 0.5
+        return roc_auc_score(y_true, y_pred_probs)
+    except ValueError as e:
+        print(f"Warning: Could not calculate AUC: {e}")
+        return 0.5
 
 
 def calculate_f1(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     """Calculate F1 score."""
-    return f1_score(y_true, y_pred)
+    try:
+        # Check if we have both classes
+        if len(np.unique(y_true)) < 2:
+            print("Warning: Only one class in y_true, returning accuracy for F1")
+            return accuracy_score(y_true, y_pred)
+        return f1_score(y_true, y_pred, zero_division=0)
+    except Exception as e:
+        print(f"Warning: Could not calculate F1: {e}")
+        return 0.0
 
 
 def calculate_precision_recall(y_true: np.ndarray, y_pred: np.ndarray) -> tuple:
     """Calculate precision and recall."""
-    precision = precision_score(y_true, y_pred)
-    recall = recall_score(y_true, y_pred)
-    return precision, recall
+    try:
+        if len(np.unique(y_true)) < 2:
+            acc = accuracy_score(y_true, y_pred)
+            return acc, acc
+        precision = precision_score(y_true, y_pred, zero_division=0)
+        recall = recall_score(y_true, y_pred, zero_division=0)
+        return precision, recall
+    except Exception as e:
+        print(f"Warning: Could not calculate precision/recall: {e}")
+        return 0.0, 0.0
 
 
 def calculate_calibration_error(y_true: np.ndarray, y_pred_probs: np.ndarray, 

@@ -115,6 +115,7 @@ class SequenceBuilder:
     def _generate_labels(self, sequences: np.ndarray) -> np.ndarray:
         """Generate synthetic overload labels based on sequence complexity."""
         labels = []
+        complexity_scores = []
         
         for seq in sequences:
             # Calculate complexity metrics
@@ -127,9 +128,16 @@ class SequenceBuilder:
             # Many different event types suggests complexity
             unique_events = len(np.unique(event_types[event_types >= 0]))
             
-            # Label as overload if high complexity
-            overload = 1 if (time_variance > 100 or unique_events > 3) else 0
-            labels.append(overload)
+            # Combine into complexity score
+            complexity = time_variance / 100 + unique_events / 10
+            complexity_scores.append(complexity)
+        
+        # Use percentile-based labeling for better balance
+        if len(complexity_scores) > 0:
+            threshold = np.percentile(complexity_scores, 70)  # Top 30% are overload
+            labels = [1 if score >= threshold else 0 for score in complexity_scores]
+        else:
+            labels = []
         
         return np.array(labels)
     
