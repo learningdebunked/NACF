@@ -111,9 +111,23 @@ class TANTrainer:
         all_preds = np.array(all_preds)
         all_labels = np.array(all_labels)
         
-        auc = roc_auc_score(all_labels, all_preds)
+        # Check if we have both classes
+        if len(np.unique(all_labels)) < 2:
+            print("Warning: Only one class in validation set, using accuracy only")
+            auc = 0.5
+            f1 = 0.0
+        else:
+            try:
+                auc = roc_auc_score(all_labels, all_preds)
+            except:
+                auc = 0.5
+            try:
+                predictions = (all_preds >= 0.5).astype(int)
+                f1 = f1_score(all_labels, predictions, zero_division=0)
+            except:
+                f1 = 0.0
+        
         predictions = (all_preds >= 0.5).astype(int)
-        f1 = f1_score(all_labels, predictions)
         accuracy = accuracy_score(all_labels, predictions)
         
         return {
