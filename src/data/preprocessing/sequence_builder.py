@@ -121,19 +121,49 @@ class SequenceBuilder:
             # Calculate complexity metrics
             event_types = seq[:, 0]
             time_deltas = seq[:, 1]
+            positions = seq[:, 2]
             
-            # High variance in timing suggests cognitive load
-            time_variance = np.var(time_deltas[time_deltas > 0])
+            # Filter out padding
+            valid_mask = event_types >= 0
+            valid_times = time_deltas[valid_mask]
+            valid_events = event_types[valid_mask]
             
-            # Many different event types suggests complexity
-            unique_events = len(np.unique(event_types[event_types >= 0]))
+            if len(valid_times) == 0:
+                complexity_scores.append(0)
+                continue
             
-            # Combine into complexity score
-            complexity = time_variance / 100 + unique_events / 10
+            # 1. Hesitation: Long pauses (high time deltas)
+            hesitation_score = np.mean(valid_times > 5.0) if len(valid_times) > 0 else 0
+            
+            # 2. Rapid clicking: Very short time deltas
+            rapid_click_score = np.mean(valid_times < 0.5) if len(valid_times) > 0 else 0
+            
+            # 3. Time variance: Inconsistent behavior
+            time_variance = np.var(valid_times) if len(valid_times) > 1 else 0
+            time_variance_norm = min(time_variance / 10.0, 1.0)  # Normalize
+            
+            # 4. Sequence length: Longer sequences suggest more exploration
+            length_score = len(valid_events) / self.seq_length
+            
+            # 5. Event diversity: More event types = more complexity
+            unique_events = len(np.unique(valid_events))
+            diversity_score = unique_events / 3.0  # Normalize by max event types
+            
+            # Combine into complexity score (weighted)
+            complexity = (
+                0.3 * hesitation_score +
+                0.2 * rapid_click_score +
+                0.2 * time_variance_norm +
+                0.15 * length_score +
+                0.15 * diversity_score
+            )
             complexity_scores.append(complexity)
         
         # Use percentile-based labeling for better balance
         if len(complexity_scores) > 0:
+            complexity_scores = np.array(complexity_scores)
+            # Add some randomness to avoid all zeros
+            complexity_scores += np.random.normal(0, 0.05, len(complexity_scores))
             threshold = np.percentile(complexity_scores, 70)  # Top 30% are overload
             labels = [1 if score >= threshold else 0 for score in complexity_scores]
         else:
