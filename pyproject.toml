@@ -62,6 +62,7 @@ nacf-train = "src.cli.train:main"
 nacf-eval = "src.cli.evaluate:main"
 nacf-demo = "src.cli.demo:main"
 nacf-generate-personas = "src.cli.generate_personas:main"
+nacf-download-data = "src.cli.download_data:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

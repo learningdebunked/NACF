@@ -41,6 +41,22 @@ pip install -r requirements.txt
 pip install -e .
 ```
 
+### Download Real Datasets
+
+```bash
+# Download all available datasets
+nacf-download-data --all
+
+# Or download specific dataset
+nacf-download-data --dataset uci-retail
+nacf-download-data --dataset retailrocket
+
+# Setup Kaggle API (for some datasets)
+nacf-download-data --setup-kaggle
+```
+
+See [DATASET_GUIDE.md](DATASET_GUIDE.md) for detailed instructions.
+
 ### Basic Usage
 
 ```python
@@ -58,6 +74,9 @@ asd_personas = generator.batch_generate(num_personas=100, persona_type='ASD')
 ### CLI Commands
 
 ```bash
+# Download datasets
+nacf-download-data --all
+
 # Train TAN model
 nacf-train --model tan --epochs 100 --batch-size 64
 

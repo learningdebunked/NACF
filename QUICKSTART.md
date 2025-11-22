@@ -12,6 +12,9 @@ conda activate nacf
 
 # 3. Install package
 pip install -e .
+
+# 4. Download datasets (optional)
+nacf-download-data --all
 ```
 
 ## Verify Installation (1 minute)

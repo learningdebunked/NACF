@@ -69,6 +69,7 @@ setup(
             "nacf-eval=src.cli.evaluate:main",
             "nacf-demo=src.cli.demo:main",
             "nacf-generate-personas=src.cli.generate_personas:main",
+            "nacf-download-data=src.cli.download_data:main",
             "nacf-reproduce=scripts.reproduce_paper_results:main",
         ],
     },
